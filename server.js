@@ -2,11 +2,10 @@ const express = require("express");
 const cors = require("cors");
 const { MercadoPagoConfig, Preference } = require("mercadopago");
 
-// 1. TUS CREDENCIALES DE PRODUCCIÓN (O TEST SI SIGUES PROBANDO)
+// 1. TUS CREDENCIALES DE PRODUCCIÓN
 const client = new MercadoPagoConfig({
-    accessToken: "APP_USR-2167071147831410-070819-322924251213e5ea1012bea0c334f621-1343899970",
+    accessToken: process.env.MP_ACCESS_TOKEN,
 });
-
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -82,4 +81,5 @@ app.post("/create_preference", async (req, res) => {
 
 app.listen(port, () => {
     console.log(`SERVIDOR LISTO en puerto ${port}`);
+
 });
