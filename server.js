@@ -17,14 +17,14 @@ app.use(cors());
 app.use(express.json());
 
 const PRODUCTS_DB = [
-    { id: 1, title: "VESTIDO SEDA FLORAL", price: 100 },
-    { id: 2, title: "BLAZER OVERSIZE", price: 100 },
-    { id: 3, title: "TOP LINO NEGRO", price: 100 },
-    { id: 4, title: "CAMISA CLÁSICA OXFORD", price: 100 },
-    { id: 5, title: "TRAJE ITALIANO SLIM", price: 100 },
-    { id: 6, title: "BOLSO DE MANO PIEL", price: 100 },
-    { id: 7, title: "RELOJ MINIMALISTA", price: 100 },
-    { id: 8, title: "GAFAS DE SOL RETRO", price: 100 }
+    { id: 1, title: "VESTIDO SEDA FLORAL", price: 1000 },
+    { id: 2, title: "BLAZER OVERSIZE", price: 1000 },
+    { id: 3, title: "TOP LINO NEGRO", price: 1000 },
+    { id: 4, title: "CAMISA CLÁSICA OXFORD", price: 1000 },
+    { id: 5, title: "TRAJE ITALIANO SLIM", price: 1000 },
+    { id: 6, title: "BOLSO DE MANO PIEL", price: 1000 },
+    { id: 7, title: "RELOJ MINIMALISTA", price: 1000 },
+    { id: 8, title: "GAFAS DE SOL RETRO", price: 1000 }
 ];
 
 app.post("/create_preference", async (req, res) => {
@@ -83,3 +83,4 @@ app.listen(port, () => {
     console.log(`SERVIDOR LISTO en puerto ${port}`);
 
 });
+
