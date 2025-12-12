@@ -12,14 +12,16 @@ const port = process.env.PORT || 3000;
 // --- CONFIGURACIÓN PRODUCCIÓN ---
 const BASE_URL = "https://tiendaanila.netlify.app"; 
 
+// --- CONFIGURACIÓN DE ENVÍO (PRECIO FIJO SEGURO) ---
+const COSTO_ENVIO = 15000; 
+
 app.use(cors());
 app.use(express.json());
 
-// --- BASE DE DATOS DE PRODUCTOS (Backend) ---
-// Importante: Los precios aquí son los que cobra Mercado Pago.
+// --- BASE DE DATOS DE PRODUCTOS (Backend - Precios Oficiales) ---
 const PRODUCTS_DB = [
-    // --- MUJER ---
-    { id: 1, title: "REMERA CROP MORLEY (BEIGE)", price: 1000 }, // TEST
+    // --- MUJER (LISTA ACTUALIZADA) ---
+    { id: 1, title: "REMERA CROP MORLEY ", price: 8000 },
     { id: 2, title: "MUSCULOSA LENCERA", price: 20000 },
     { id: 3, title: "BERMUDA DE LINO", price: 15000 },
     { id: 4, title: "BODY DE ALGODÓN", price: 8000 },
@@ -27,21 +29,16 @@ const PRODUCTS_DB = [
     { id: 6, title: "REMERA HILO CROCHET", price: 35000 },
     { id: 7, title: "REMERA BRODERIE", price: 15000 },
     { id: 8, title: "SHORT LENCERO", price: 18000 },
-    { id: 9, title: "REMERA CROP MORLEY (VISÓN)", price: 8000 },
+    { id: 9, title: "REMERA CROP MORLEY ", price: 8000 },
     { id: 10, title: "LENCERA RASO PUNTILLA", price: 35000 },
     { id: 11, title: "REMERA BRILLOS STRASS", price: 15000 },
-    { id: 12, title: "SHORT LENCERO (VISÓN)", price: 18000 },
-
-    // --- ANTIGUOS (HOMBRE / ACCESORIOS) ---
-    { id: 13, title: "CAMISA CLÁSICA OXFORD", price: 25000 },
-    { id: 14, title: "TRAJE ITALIANO SLIM", price: 120000 },
-    { id: 17, title: "GAFAS DE SOL RETRO", price: 12000 },
-
+    { id: 12, title: "SHORT LENCERO ", price: 18000 },
+    
     // --- NUEVOS AGREGADOS ---
     { id: 18, title: "CAMISA NEGRA", price: 25000 },
-    { id: 19, title: "BLUSA ALITAS LINO BORDADO", price: 18000 },
-    { id: 20, title: "REMERA BOTONES Y PUNTILLAS", price: 36000 },
-    { id: 21, title: "REMERA BORDADA ESPALDA ARO", price: 45000 }
+    { id: 19, title: "BLUSA LINO BORDADO", price: 18000 },
+    { id: 20, title: "REMERA BOTONES ", price: 36000 },
+    { id: 21, title: "REMERA BORDADA ", price: 45000 }
 ];
 
 app.post("/create_preference", async (req, res) => {
@@ -50,18 +47,18 @@ app.post("/create_preference", async (req, res) => {
 
         if (!items || items.length === 0) return res.status(400).json({ error: "Carrito vacío" });
 
-        // Mapeamos los items del carrito frontend a los precios seguros del backend
+        // 1. Validar productos y precios contra la base de datos del servidor
         const itemsToBuy = items.map(item => {
             const product = PRODUCTS_DB.find(p => p.id === Number(item.id));
             
-            // Si el producto no existe en la DB del server, usamos un fallback genérico (o lanzamos error)
             if (!product) {
                 console.warn(`Producto ID ${item.id} no encontrado en backend.`);
+                // Fallback seguro por si un producto viejo quedó en caché
                 return { 
                     id: "unknown", 
                     title: item.name || "Producto Desconocido", 
                     quantity: Number(item.qty), 
-                    unit_price: 100, // Precio simbólico por seguridad si falla ID
+                    unit_price: 100, 
                     currency_id: "ARS" 
                 };
             }
@@ -75,6 +72,12 @@ app.post("/create_preference", async (req, res) => {
             };
         });
 
+        // 2. Validar Envío (SEGURIDAD)
+        // Si el frontend dice que el envío cuesta algo (mayor a 0), cobramos los $15.000 oficiales.
+        // Si dice 0, asumimos retiro en local.
+        const incomingShipping = Number(shippingCost) || 0;
+        const finalShippingCost = incomingShipping > 0 ? COSTO_ENVIO : 0;
+
         const body = {
             items: itemsToBuy,
             payer: {
@@ -83,10 +86,10 @@ app.post("/create_preference", async (req, res) => {
                 identification: { type: "DNI", number: buyer.dni || "11111111" }
             },
             shipments: {
-                cost: Number(shippingCost) || 0,
+                cost: finalShippingCost, // Aquí se aplica el costo validado
                 mode: "not_specified",
             },
-            external_reference: orderId, // ID de la orden en Firebase
+            external_reference: orderId, // Vinculamos con el pedido de Firebase
             
             back_urls: {
                 success: `${BASE_URL}/perfil.html`,
